@@ -30,7 +30,7 @@ public class TurretController : MonoBehaviour
     {
         if(other.CompareTag("Player"))
         {
-        Fire(other.transform);
+            StopFire();
         }
     }
 
@@ -46,13 +46,20 @@ public class TurretController : MonoBehaviour
         while (true)
         {
             yield return _wait;
-            
-            transform.rotation = Quaternion.LookRotation(new Vector3(
-                target.position.x,
-                0,
-                target.position.z)
-            );
-            
+
+            // 타겟을 바라보도록 Turret의 Muzzle Point 회전값 설정
+            Vector3 targetDirection = target.position - transform.position;
+            targetDirection.y = 0; // y축은 고정, 수평 회전만 조정
+
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+            transform.rotation = targetRotation;
+
+            // transform.rotation = Quaternion.LookRotation(new Vector3(
+            //     target.position.x,
+            //     0,
+            //     target.position.z)
+            // );
+
             PooledBehaviour bullet = _bulletPool.TakeFromPool();
             bullet.transform.position = _muzzlePoint.position;
             bullet.OnTaken(target);
@@ -72,7 +79,7 @@ public class TurretController : MonoBehaviour
     }
 
     // 코루틴 중지(발사 중지)
-    private void StopFiring()
+    private void StopFire()
     {
         if(_coroutine != null)
         {
