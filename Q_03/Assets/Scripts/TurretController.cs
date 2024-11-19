@@ -25,6 +25,15 @@ public class TurretController : MonoBehaviour
         }
     }
 
+    // Player의 범위를 벗어났을 때 트리거 중지
+    private void OnTriggerExit(Collider other)
+    {
+        if(other.CompareTag("Player"))
+        {
+            StopFire();
+        }
+    }
+
     private void Init()
     {
         _coroutine = null;
@@ -37,13 +46,20 @@ public class TurretController : MonoBehaviour
         while (true)
         {
             yield return _wait;
-            
-            transform.rotation = Quaternion.LookRotation(new Vector3(
-                target.position.x,
-                0,
-                target.position.z)
-            );
-            
+
+            // 타겟을 바라보도록 Turret의 Muzzle Point 회전값 설정
+            Vector3 targetDirection = target.position - transform.position;
+            targetDirection.y = 0; // y축은 고정, 수평 회전만 조정
+
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+            transform.rotation = targetRotation;
+
+            // transform.rotation = Quaternion.LookRotation(new Vector3(
+            //     target.position.x,
+            //     0,
+            //     target.position.z)
+            // );
+
             PooledBehaviour bullet = _bulletPool.TakeFromPool();
             bullet.transform.position = _muzzlePoint.position;
             bullet.OnTaken(target);
@@ -53,6 +69,23 @@ public class TurretController : MonoBehaviour
 
     private void Fire(Transform target)
     {
-        _coroutine = StartCoroutine(FireRoutine(target));
+        // 기존 코드는 무한 루프 상황 FireRoutine이 코루틴으로 실행되고 있어 Fire은 반복적으로 호출되면 안됨
+        // _coroutine = StartCoroutine(FireRoutine(target));
+
+        if (_coroutine == null)
+        {
+           _coroutine = StartCoroutine(FireRoutine(target));
+        }
     }
+
+    // 코루틴 중지(발사 중지)
+    private void StopFire()
+    {
+        if(_coroutine != null)
+        {
+            StopCoroutine(_coroutine);
+            _coroutine = null;
+        }
+    }
+
 }

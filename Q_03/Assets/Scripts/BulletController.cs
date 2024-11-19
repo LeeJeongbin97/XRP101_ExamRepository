@@ -22,13 +22,20 @@ public class BulletController : PooledBehaviour
         StartCoroutine(DeactivateRoutine());
     }
 
+    /* 기존 코드에서는 Player컨트롤러를 바로 호출했지만, Player컨트롤러 스크립트가 null인지 확인하고 HP값을 출력하기 위해 디버그 로그 추가
+     */
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            other
-                .GetComponent<PlayerController>()
-                .TakeHit(_damageValue);
+            PlayerController playerController = other.GetComponent<PlayerController>();
+
+            if (playerController != null)
+            {
+                Debug.Log("피격! 현재 HP: " + playerController.Hp);
+
+                playerController.TakeHit(_damageValue); // 데미지를 주는 메서드 호출
+            }
         }
     }
 
